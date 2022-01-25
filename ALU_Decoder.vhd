@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 --helloooo
-entity ALU_Decoder is
+entity ALU_Decoder is	--aoooooooo
 	port(
 			Funct	: in std_logic_vector(5 downto 0);
 			ALUOp	: in std_logic_vector(1 downto 0);
