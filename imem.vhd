@@ -29,7 +29,7 @@ begin
 			if (we='1') then mem (to_integer(unsigned(wa(5 downto 0)))):= wd;	--a escrita ocorre de 1 em 1 endereço, então utilizamos 
 			end if;									-- 6 bits a partir do bit 0 para endereçar
 		 end if;
-		 tmp := std_logic_vector(unsigned(ra)-4194304);		--programa começa no endereço 4194304, então aqui ocorre a conversão
+		 tmp := std_logic_vector(unsigned(ra)-4194304);		--programa começa no endereço x00400000, então aqui ocorre a conversão
 		 rd <= mem (   to_integer(   unsigned(tmp(7 downto 2))  )  )    ;	--para leitura, o PC pula de 4 em 4, então aqui ocorre a divisão por 4
 											-- e a utilização de apenas 6 bits de endereçamento para os 64 endereços
 	 end process;
