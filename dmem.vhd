@@ -21,7 +21,7 @@ begin
 	 
 	 -- read or write memory
 	 	--a memória será enxergada externamente como possuindo 32 bits para endereçamento, mas internamente possui apenas 6 bits de endereçamento
-		 -- e 64 endereços. O programa começa a buscar informações na memória a partir do endereço 268500992, então o endereço é convertido a seguir
+		 -- e 64 endereços. O programa começa a buscar informações na memória a partir do endereço x10010000, então o endereço é convertido a seguir
 		 tmp := std_logic_vector(unsigned(a)-268500992);	
 		 if rising_edge(clk) then	--escrita sincrona
 			if (we='1') then mem (to_integer(unsigned(tmp(7 downto 2))  )  ):= wd;	--extrai-se os bits 7:2 do endereço, de forma que o acesso a memória se da sempre
