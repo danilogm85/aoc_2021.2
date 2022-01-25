@@ -1,6 +1,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
+--Este código apenas junta o alu decoder, main decoder e as entradas e saidas externas. Informações detalhadas são encontradas nos códigos do main decoder e alu decoder
+
 entity ControlUnit is
 	port(
 			RESET			: in std_logic;
