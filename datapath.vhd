@@ -2,9 +2,12 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
+--DATAPATH conforme o diagrama de microarquitetura
+--	obs: as memorias de instruções e dados estão presentes no diagrama do datapath mas foram colocadas externas ao datapath no VHDL
+
 entity datapath is -- MIPS datapath
 
-	port(
+	port(		--portas de conexão com as memórias e com a control unit
 		 clk:						in STD_LOGIC;
 		 pc_reset: 				in STD_LOGIC;
 		 rf_reset:				in STD_LOGIC;
@@ -187,7 +190,7 @@ architecture rtl of datapath is
 	
 	----------------------------------SIGNALS--------------------------------
 	--15 SINAIS
-	
+	--sinais de interconxeão dos componentes conforme o diagrama
 	signal pc_plus4			:STD_LOGIC_VECTOR(31 downto 0);		--1
 	signal pc_branch			:STD_LOGIC_VECTOR(31 downto 0);		--2
 	signal pc_jump				:STD_LOGIC_VECTOR(31 downto 0);		--3
@@ -210,15 +213,16 @@ architecture rtl of datapath is
 	
 	begin
 	
-	pc_jump <= pc_plus4(31 downto 28) & instr(25 downto 0) & "00";
-	gtz <= not(read_reg1(31));
-	nor_out <= not(alu_result);
-	alu_out <= alu_result;
-	pc_out <= pc;
+	pc_jump <= pc_plus4(31 downto 28) & instr(25 downto 0) & "00";--produz o sinal PC jump deslocando o imediato 2 vezes e utilizando os 4 bits mais significativos do PC+4
+	gtz <= not(read_reg1(31));	--Se o sinal do registrador é positivo, GTZ é ativado, indicando que o numero é maior que zero
+	nor_out <= not(alu_result);	--NOR = NOT(OR)
+	alu_out <= alu_result;		--envia o resultado da alu para o alu_out que será conectado à memoria de dados
+	pc_out <= pc;			--para conectar o PC à memória de instruções
 --	xor_out <= read_reg1 XOR read_reg2;
-	dm_writedata <= read_reg2;
-	pc_jr <= read_reg1;
+	dm_writedata <= read_reg2;	--para conectar a memória de dados à saida da porta 2 do banco de registros
+	pc_jr <= read_reg1;		--para instrução jr, o mux do PC deve receber a leitura do registrador selecionado
 	
+		--realiza todas as conexoes de acordo com o diagrama
 	register_file_pm: register_file port map(instr(25 downto 21),instr(20 downto 16),write_reg_addr,write_reg_data,rf_reset,clk,rf_we,read_reg1,read_reg2);
 	alu_pm: alu port map(read_reg1,alu_in_b,alu_ctrl,alu_result,zero);
 	pc_pm: program_counter port map(pl_pc,pc_reset,clk,pc);
@@ -245,7 +249,7 @@ use IEEE.STD_LOGIC_1164.all;
 --use IEEE.NUMERIC_STD.all;
 use IEEE.NUMERIC_STD.all;
 
-entity register_file is
+entity register_file is		--banco de 32 registradores de 32 bits com 2 portas de leitura e uma de escrita
     port 
     (
       a1	                  : in std_logic_vector	(4 downto 0);
@@ -309,7 +313,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
-entity alu is
+entity alu is	--ALU com suporte para 7 operações, com 3 bits para seleção da operação
     port 
     (
       a	                  : in std_logic_vector	(31 downto 0);
@@ -328,22 +332,22 @@ architecture rtl of alu is
 	process(a,b,sel)
 	begin
 		zero <= '0';
-		case sel is
-			when "000" =>	r <= a AND	
+		case sel is	--operações de acordo com a tabela verdade do livro do casal Harris
+			when "000" =>	r <= a AND	--AND
 			b;
-			when "001" =>	r <= a OR b;
-			when "010" =>	r <= std_logic_vector(signed(a)+ signed(b));
-			when "011" =>	r <= x"00000000";
-			when "100" =>	r <= a AND not(b);
-			when "101" =>	r <= a OR not(b);
-			when "110" =>
+			when "001" =>	r <= a OR b;	--OR
+			when "010" =>	r <= std_logic_vector(signed(a)+ signed(b));	--ADD
+			when "011" =>	r <= x"00000000";	--not used
+			when "100" =>	r <= a AND not(b);		--AB'
+			when "101" =>	r <= a OR not(b);		--A+B'
+			when "110" =>		--SUB
 				r <= std_logic_vector(signed(a)- signed(b));
-				if(a = b) then 
+				if(a = b) then 		--Verifica se é zero
 					zero <= '1';
 				else
 					zero <= '0';
 				end if;
-			when "111" =>	
+			when "111" =>	--SLT
 				if(a < b) then 
 					r <= x"FFFFFFFF";
 				else
@@ -364,7 +368,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
-entity program_counter is
+entity program_counter is	--REGISTRADOR SÍNCRONO COM RESET ASSINCRONO PARA O ENDEREÇO x00400000, que é o local de inicio do programa no mapa de memória MIPS
     port 
     (
       pl	                  : in std_logic_vector	(31 downto 0);
@@ -395,7 +399,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 	
-entity mux_6x1 is
+entity mux_6x1 is	--MUX que escolhe a origem dos dados de escrita de registradores
     port 
     (
       a	                  : in std_logic_vector	(31 downto 0);
@@ -416,7 +420,7 @@ architecture rtl of mux_6x1 is
 	
 	process(sel,a,b,c,d,e,f)
 	begin
-		case sel is
+		case sel is	--seleção de acordo com o diagrama
 			when "000" =>	o <= a;
 			when "001" =>	o <= b;
 			when "010" =>	o <= c;
@@ -437,7 +441,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 	 
-entity mux_4x1 is
+entity mux_4x1 is		--MUX que seleciona a origem do endereço a ser armazenado no PC
     port 
     (
       a	                  : in std_logic_vector	(31 downto 0);
@@ -456,7 +460,7 @@ architecture rtl of mux_4x1 is
 	
 	process(sel,a,b,c,d)
 	begin
-		case sel is
+		case sel is	--seleção de acordo com o diagrama
 			when "00" =>	o <= a;
 			when "01" =>	o <= b;
 			when "10" =>	o <= c;
@@ -476,7 +480,7 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;	
 	
 	
-entity mux_3x1 is
+entity mux_3x1 is	--Seleciona a origem do endereço do registrador de escrita
     port 
     (
       a	                  : in std_logic_vector	(4 downto 0);
@@ -494,7 +498,7 @@ architecture rtl of mux_3x1 is
 	
 	process(sel,a,b,c)
 	begin
-		case sel is
+		case sel is	--Seleção de acordo com o diagrama
 			when "00" 	=>	o <= a;
 			when "01" 	=>	o <= b;
 			when "10" 	=>	o <= c;
@@ -513,7 +517,7 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 	
 	
-entity mux_2x1 is
+entity mux_2x1 is		--Mux que seleciona a origem do segundo operando da ALU
     port 
     (
       a	                  : in std_logic_vector	(31 downto 0);
@@ -530,9 +534,9 @@ architecture rtl of mux_2x1 is
 	
 	process(sel,a,b)
 	begin
-		case sel is
-			when '0' =>	o <= a;
-			when '1' =>	o <= b;
+		case sel is	
+			when '0' =>	o <= a;		--Porta RD2 do reg file
+			when '1' =>	o <= b;		--Imediato extendido
 			when others => o <= x"00000000";
 		end case;
 	end process;
@@ -548,7 +552,7 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 	
 	
-entity somador is
+entity somador is	--somador 32 bits
     port 
     (
       a	                  : in std_logic_vector	(31 downto 0);
@@ -578,7 +582,7 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 	
 	
-entity sign_extend is
+entity sign_extend is	--Extensor de imediato com seleção do tipo de extensão (de sinal ou de zero)
     port 
     (
       i	                  : in std_logic_vector	(15 downto 0);
@@ -594,10 +598,10 @@ architecture rtl of sign_extend is
 	
 	process(i, sel_type)
 	begin
-		if(sel_type='1') then
+		if(sel_type='1') then		--SEL=1 gera a extensão de zero
 			o <= x"0000" & i(15 downto 0);
 		else
-			if(i(15) = '0') then
+			if(i(15) = '0') then	--SEL=0 gera a extensão do sinal do imediato
 				o <= x"0000" & i(15 downto 0);
 			else
 				o <= x"FFFF" & i(15 downto 0);
@@ -616,7 +620,7 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 	
 	
-entity shift_two_32bit is
+entity shift_two_32bit is	--deslocador de dois para a esquerda
     port 
     (
       i	                  : in std_logic_vector	(31 downto 0);
@@ -645,7 +649,7 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 	
 	
-entity shift_four_16bit is
+entity shift_four_16bit is    --deslocador de quatro(hexa) para a esquerda
     port 
     (
       i	                  : in std_logic_vector	(15 downto 0);
@@ -674,7 +678,7 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 	
 	
-entity xor_32bit is
+entity xor_32bit is	--realiza XOR entre 2 vetores de 32 bits
     port 
     (
       a	                  : in std_logic_vector	(31 downto 0);
