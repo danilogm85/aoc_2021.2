@@ -4,6 +4,8 @@ use ieee.numeric_std.all;
 use ieee.std_logic_textio.all;
 use std.textio.all;
 
+--Teste do processador
+
 entity tb_seita_processor is
 end;
 
@@ -27,10 +29,10 @@ architecture teste of tb_seita_processor is
 
 	constant clk_period : time := 10ns;
 	
-	signal reset					:STD_LOGIC := '1';
+	signal reset					:STD_LOGIC := '1';	--Inicia em 1 para inicializar o estado arquitetural
 	signal clk						:STD_LOGIC := '0';
-	signal im_waddr				:std_logic_vector(31 downto 0) := x"00000000";
-	signal im_we					:STD_LOGIC := '1';
+	signal im_waddr				:std_logic_vector(31 downto 0) := x"00000000";	
+	signal im_we					:STD_LOGIC := '1';	--Inicia em 1 para escrever na instruction memory
 	signal im_wd					:std_logic_vector(31 downto 0) := x"00000000";
 
 begin
@@ -39,11 +41,11 @@ begin
 	
 	process
 	
-	 file mem_file: text open read_mode is "trabalho2-j.txt";
-	 variable L: line;
+	 file mem_file: text open read_mode is "trabalho2-j.txt";	--Inicializa arquivo que contem o código de máquina e as variaveis para iterar sobre ele
+	 variable L: line;	
 	 variable ch: character;
 	 variable i, index, result: integer;
-	 variable data_tmp: std_logic_vector(31 downto 0);
+	 variable data_tmp: std_logic_vector(31 downto 0);	--Variavel auxiliar para definir os dados de escrita da IM
 	
 	begin
 	
@@ -57,31 +59,31 @@ begin
 		index := 0; 
 		 --FILE_OPEN (mem_file, "C:\Users\Primetals\Documents\Quartus Projetos\Trabalho AOC\seita_processor\file.dat",READ_MODE);
 		 
-		while not endfile(mem_file) loop
+		while not endfile(mem_file) loop	--Loop enquanto o arquivo nao acabar
 			 readline(mem_file, L);
 			 result := 0;
-			 for i in 1 to 8 loop
-				 read (L, ch);
-				 if '0' <= ch and ch <= '9' then
+			 for i in 1 to 8 loop		--Loop para ler os 8 caracteres HEXA da instrução
+				 read (L, ch);		--Le o caractere no indice i
+				 if '0' <= ch and ch <= '9' then	--Verificando máscara do código da instrução
 					result := character'pos(ch) - character'pos('0');
 				 elsif 'a' <= ch and ch <= 'f' then
 					result := character'pos(ch) - character'pos('a')+10;
-				 else report "Format error on line" & integer'image(index) severity error;
+				 else report "Format error on line" & integer'image(index) severity error;	--Se a mascara estiver incorreta, reporta o erro
 				 end if;
-				 data_tmp(35-i*4 downto 32-i*4) := std_logic_vector(to_unsigned(result,4));
+				 data_tmp(35-i*4 downto 32-i*4) := std_logic_vector(to_unsigned(result,4));	--Escreve o caractere nos bits correspondentes da variavel auxiliar
 			 end loop;
-			 im_waddr <= std_logic_vector(to_unsigned(index,32)); --4.194.304 = x"00400000" endereço inicial do PC
-			 im_wd <= data_tmp;
+			 im_waddr <= std_logic_vector(to_unsigned(index,32)); --assim que acaba de ler a instrução, seta o endereço de escrita para index
+			 im_wd <= data_tmp;	--coloca a instrução na porta de escrita
 			 clk <= '0';
 			 wait for clk_period/2;
 			 clk <= '1';
-			 wait for clk_period/2;
-			 index := index + 1;
+			 wait for clk_period/2; --pulso de clock para registrar
+			 index := index + 1;	--segue para próxima instrução
 		end loop;
-		reset <= '0';
-		im_we <= '0';
+		reset <= '0';	--Desliga o reset para iniciar o programa
+		im_we <= '0';	--Desativa escrita da IM
 		
-		CLOCK_LOOP : LOOP
+		CLOCK_LOOP : LOOP	--Inicia clock para rodar o programa
 		 clk <= '0';
 		 WAIT FOR (clk_period/2);
 		 clk <= '1';
