@@ -2,16 +2,18 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
+--VHDL top-level entity do processador. Esse código junta o datapath, control unit e memórias
+--foi necessário adicionar uma porta de escrita para a memória de instruções por motivos explicados no cabeçalho do imem.vhdl
 
 entity seita_processor is
 
-	port
+	port	
 	(
-		reset					:in STD_LOGIC;
-		clk					:in STD_LOGIC;
-		im_waddr				:in std_logic_vector(31 downto 0);
-		im_we					:in STD_LOGIC;
-		im_wd					:in std_logic_vector(31 downto 0)
+		reset					:in STD_LOGIC;		--Master reset do processador
+		clk					:in STD_LOGIC;		--Master clock
+		im_waddr				:in std_logic_vector(31 downto 0);	--Endereço de escrita da memória de instruções
+		im_we					:in STD_LOGIC;				--Enable de escrite na memoria de instruções
+		im_wd					:in std_logic_vector(31 downto 0)	--Dados para escrita da memoria de instruções
 	
 	);
 
@@ -21,7 +23,7 @@ architecture rtl of seita_processor is
 
 	component datapath is -- MIPS datapath
 
-		port(
+		port(		--PORTAS DO DATAPATH, INFORMAÇÕES MAIS DETALHADAS EM datapath.vhdl
 			 clk:						in STD_LOGIC;
 			 pc_reset: 				in STD_LOGIC;
 			 rf_reset:				in STD_LOGIC;
@@ -46,8 +48,8 @@ architecture rtl of seita_processor is
 	
 	
 	
-	component ControlUnit is
-		port(
+	component ControlUnit is	
+		port(	--PORTAS DA CONTROL UNIT, INFORMAÇÕES MAIS DETALHADAS EM ControlUnit.VHDL
 			RESET			: in std_logic;
 			ZERO			: in std_logic;
 			GTZ			: in std_logic;
@@ -71,7 +73,7 @@ architecture rtl of seita_processor is
 	
 	component dmem is
 	
-	 port(
+	 port(		--PORTAS DA MEMÓRIA DE DADOS, INFORMAÇÕES MAIS DETALHADAS EM dmem.vhdl
 			clk, we: in STD_LOGIC;
 			a, wd: in STD_LOGIC_VECTOR (31 downto 0);
 			rd: out STD_LOGIC_VECTOR (31 downto 0)
@@ -81,7 +83,7 @@ architecture rtl of seita_processor is
 	
 	component imem is
 	
-	 port(
+	 port(		--PORTAS DA MEMÓRIA DE INSTRUÇÕES, INFORMAÇÕES MAIS DETALHADAS EM imem.vhdl
 			clk, we: in STD_LOGIC;
 			ra, wa, wd: in STD_LOGIC_VECTOR (31 downto 0);
 			rd: out STD_LOGIC_VECTOR (31 downto 0)
@@ -89,7 +91,7 @@ architecture rtl of seita_processor is
 	
 	end component;
 
-
+		--SINAIS DE INTERCONEXÃO ENTRE OS BLOCOS, CONFORME OS DIAGRAMAS
 	signal pc_out			:std_logic_vector(31 downto 0);
 	signal instr			:std_logic_vector(31 downto 0);
 	signal alu_out			:std_logic_vector(31 downto 0);
@@ -112,7 +114,7 @@ architecture rtl of seita_processor is
 	signal pc_src			:std_logic_vector(1 downto 0);
 
 begin
-	
+	--CONEXÃO ENTRE OS BLOCOS, CONFORME OS DIAGRAMAS
 	opcode 	<= instr(31 downto 26);
 	funct 	<= instr(5 downto 0);
 	
