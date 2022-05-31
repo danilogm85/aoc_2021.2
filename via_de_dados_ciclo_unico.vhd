@@ -4,7 +4,6 @@
 -- Autoria: Professor Ricardo de Oliveira Duarte
 -- Via de dados do processador_ciclo_unico
 
-
 library IEEE;
 use IEEE.std_logic_1164.all;
 
@@ -49,7 +48,6 @@ entity via_de_dados_ciclo_unico is
     data_mem_addr   : out std_logic_vector((data_width/2) - 1 downto 0);
 	 
 	 debug_read_Rs		: out std_logic_vector(3 downto 0)
-
     
 	);
 end entity via_de_dados_ciclo_unico;
@@ -94,8 +92,7 @@ architecture comportamento of via_de_dados_ciclo_unico is
 			sai_rs_dado : out std_logic_vector((largura_dado - 1) downto 0);
 			sai_rt_dado : out std_logic_vector((largura_dado - 1) downto 0);
 			clk         : in std_logic;
-			we          : in std_logic;
-			reset          : in std_logic
+			we          : in std_logic
 		);
 	end component;
 
@@ -264,7 +261,6 @@ architecture comportamento of via_de_dados_ciclo_unico is
 	-- Veja os exemplos abaixo:
   aux_read_rs   <= instrucao(25 downto 21);  -- OP OP OP OP OP OP RS RS RS RS RS RT RT RT RT RT RD RD RD RD RD SHAMT SHAMT SHAMT SHAMT SHAMT FUNCT(6bits)
   debug_read_Rs <= aux_data_outrs(3 downto 0);
-
   aux_read_rt   <= instrucao(20 downto 16);  -- OP OP OP OP OP OP RS RS RS RS RS RT RT RT RT RT RD RD RD RD RD
   aux_write_rd  <= instrucao(15 downto 11); -- OP OP OP OP OP OP RS RS RS RS RS RT RT RT RT RT RD RD RD RD RD
   aux_shamt_sa  <= instrucao(10 downto 6);
@@ -338,8 +334,7 @@ architecture comportamento of via_de_dados_ciclo_unico is
 			sai_rs_dado => aux_data_outrs,
 			sai_rt_dado => aux_data_outrt,
 			clk => clock,
-			we => aux_reg_write,
-			reset => reset
+			we => aux_reg_write
 		);
 
   instancia_pc : pc
